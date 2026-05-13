@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vy's English Speaking Stage</title>
+    <style>
+        :root {
+            --pink-main: #ff85a2;
+            --pink-bg: #fff0f3;
+            --text-dark: #4a4a4a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--pink-bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .stage-area {
+            position: relative;
+            background: #000;
+            height: 250px;
+            overflow: hidden;
+        }
+
+        #camera-view {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            opacity: 0.7;
+        }
+
+        .emoji-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            z-index: 10;
+            text-shadow: 0 0 20px rgba(255,255,255,0.8);
+        }
+
+        .content-card {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            background: white;
+            border-radius: 30px 30px 0 0;
+            margin-top: -30px;
+            z-index: 20;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.05);
+        }
+
+        .category-tag {
+            display: inline-block;
+            background: #ffe0e6;
+            color: #ff4d6d;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .english-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d3436;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            min-height: 80px;
+        }
+
+        .vietnamese-text {
+            font-size: 14px;
+            color: #a0a0a0;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .beep-highlight {
+            color: #ff4d6d;
+            background: #fff0f3;
+            padding: 0 5px;
+            border-radius: 5px;
+            border: 2px dashed #ff85a2;
+        }
+
+        .controls {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: #fff;
+            padding-bottom: 40px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 20px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 0 #ddd;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .btn-listen { background: #ff85a2; color: white; box-shadow: 0 4px 0 #d64d6d; }
+        .btn-next { background: #4ecdc4; color: white; box-shadow: 0 4px 0 #3ba8a0; }
+
+        .btn-icon { font-size: 24px; margin-bottom: 5px; }
+        .btn-label { font-size: 12px; text-transform: uppercase; }
+
+        .tip-box {
+            background: #f8f9fa;
+            border-left: 4px solid #ff85a2;
+            padding: 10px;
+            font-size: 13px;
+            color: #666;
+            text-align: left;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="stage-area">
+        <video id="camera-view" autoplay playsinline muted></video>
+        <div id="display-emoji" class="emoji-overlay">👋</div>
+    </div>
+
+    <div class="content-card">
+        <div id="tag" class="category-tag">CHÀO HỎI</div>
+        <div id="en-text" class="english-text">Hello everyone! My name is <span class="beep-highlight">BÍP</span>.</div>
+        <div id="vi-text" class="vietnamese-text">Chào mọi người! Tên con là Vy.</div>
+        
+        <div class="tip-box">
+            <strong>Mẹo cho Vy:</strong> <span id="tip-text">Cười thật tươi và vẫy tay chào nhé!</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-listen" onclick="handleListen()">
+            <span class="btn-icon">🔊</span>
+            <span class="btn-label">Nghe & Bíp</span>
+        </button>
+        <button class="btn btn-next" onclick="handleNext()">
+            <span class="btn-icon">👉</span>
+            <span class="btn-label" id="next-label">Tiếp theo</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    const script = [
+        { cat: "CHÀO HỎI", emoji: "👋", en: "Hello everyone! / My name is <span class='beep-highlight'>BÍP</span>. / I am <span class='beep-highlight'>BÍP</span> years old.", vi: "Chào mọi người! Tên con là Vy. Con 7 tuổi.", parts: [{t:'s', v:"Hello everyone!"}, {t:'b'}, {t:'s', v:"My name is"}, {t:'b'}, {t:'s', v:"I am"}, {t:'b'}, {t:'s', v:"years old."}], tip: "Nhìn vào camera và vẫy tay chào thật thân thiện!" },
+        { cat: "TRƯỜNG HỌC", emoji: "🏫", en: "I am a student in Class 2A1 / at <span class='beep-highlight'>BÍP</span> Primary School.", vi: "Con học lớp 2A1 trường tiểu học Dục Tú.", parts: [{t:'s', v:"I am a student in Class two A one at"}, {t:'b'}, {t:'s', v:"Primary School."}], tip: "Đứng thẳng người và nói thật rõ ràng tên trường mình." },
+        { cat: "GIA ĐÌNH", emoji: "👨‍👩‍👧‍👦", en: "There are four people in my family: / dad, mom, brother and me.", vi: "Nhà con có 4 người: bố, mẹ, anh trai và con.", parts: [{t:'s', v:"There are four people in my family: dad, mom, brother and me."}], tip: "Dùng ngón tay đếm 1, 2, 3, 4 khi nói nhé." },
+        { cat: "SỞ THÍCH", emoji: "🎨", en: "I love drawing / and dancing in my free time.", vi: "Con thích vẽ và nhảy múa vào lúc rảnh rỗi.", parts: [{t:'s', v:"I love drawing and dancing in my free time."}], tip: "Làm động tác như đang cầm cọ vẽ hoặc nhún nhảy." },
+        { cat: "MÀU SẮC", emoji: "💗", en: "My favorite color is pink / because it is sweet.", vi: "Màu yêu thích của con là màu hồng vì nó rất ngọt ngào.", parts: [{t:'s', v:"My favorite color is pink because it is sweet."}], tip: "Chỉ vào quần áo hoặc xoay một vòng như công chúa." },
+        { cat: "MÓN ĂN", emoji: "🍕", en: "I like eating pizza / and drinking orange juice.", vi: "Con thích ăn pizza và uống nước cam.", parts: [{t:'s', v:"I like eating pizza and drinking orange juice."}], tip: "Xoa bụng và làm bộ mặt như đang thấy rất ngon." },
+        { cat: "ƯỚC MƠ", emoji: "👩‍🏫", en: "In the future, / I want to be a teacher.", vi: "Trong tương lai, con muốn trở thành cô giáo.", parts: [{t:'s', v:"In the future, I want to be a teacher."}], tip: "Giơ tay như đang giảng bài hoặc cầm một quyển sách." },
+        { cat: "TẠM BIỆT", emoji: "✨", en: "Thank you for listening. / Goodbye!", vi: "Cảm ơn mọi người đã lắng nghe. Tạm biệt!", parts: [{t:'s', v:"Thank you for listening. Goodbye!"}], tip: "Cúi chào lịch sự và vẫy tay chào khán giả." }
+    ];
+
+    let currentStep = 0;
+    const synth = window.speechSynthesis;
+    let audioCtx = null;
+
+    window.onload = async () => {
+        // Khởi tạo camera
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            document.getElementById('camera-view').srcObject = stream;
+        } catch (err) {
+            console.log("Camera không mở được, nhưng game vẫn chạy tiếp.");
+        }
+        updateUI();
+    };
+
+    function updateUI() {
+        const item = script[currentStep];
+        document.getElementById('tag').innerText = item.cat;
+        document.getElementById('en-text').innerHTML = item.en;
+        document.getElementById('vi-text').innerText = item.vi;
+        document.getElementById('display-emoji').innerText = item.emoji;
+        document.getElementById('tip-text').innerText = item.tip;
+        document.getElementById('next-label').innerText = currentStep === script.length - 1 ? "HOÀN THÀNH" : "TIẾP THEO";
+    }
+
+    async function playBeep() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = 800;
+        gain.gain.value = 0.1;
+        osc.start();
+        setTimeout(() => osc.stop(), 200);
+    }
+
+    function getFemaleVoice() {
+        const voices = synth.getVoices();
+        // Tìm giọng nữ tiếng Anh
+        return voices.find(v => (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google US English')) && v.lang.includes('en')) || voices[0];
+    }
+
+    async function handleListen() {
+        if (synth.speaking) synth.cancel();
+        
+        const parts = script[currentStep].parts;
+        for (const p of parts) {
+            if (p.t === 's') {
+                await new Promise(resolve => {
+                    const utter = new SpeechSynthesisUtterance(p.v);
+                    utter.voice = getFemaleVoice();
+                    utter.rate = 0.8;
+                    utter.pitch = 1.2; // Chỉnh giọng cao cho trẻ trung
+                    utter.onend = resolve;
+                    synth.speak(utter);
+                });
+            } else {
+                await playBeep();
+                await new Promise(r => setTimeout(r, 1200)); // Chờ bé nói tên
+            }
+        }
+    }
+
+    function handleNext() {
+        if (currentStep < script.length - 1) {
+            currentStep++;
+            updateUI();
+        } else {
+            alert("Chúc mừng Vy đã hoàn thành bài nói xuất sắc! ⭐⭐⭐⭐⭐");
+            currentStep = 0;
+            updateUI();
+        }
+    }
+</script>
+</body>
+</html>
