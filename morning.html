@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bé Học Tiếng Anh: Hành Trình Buổi Sáng Siêu Cấp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
+        
+        :root {
+            --primary: #FF9F43;
+            --secondary: #54A0FF;
+            --success: #1DD1A1;
+            --danger: #FF6B6B;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+            touch-action: manipulation;
+            overflow-x: hidden;
+        }
+
+        .bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .point-pop {
+            position: absolute;
+            animation: pointPop 0.8s ease-out forwards;
+            font-weight: bold;
+            color: #1DD1A1;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes pointPop {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        .step-node {
+            transition: all 0.3s ease;
+        }
+
+        .step-node.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(255, 159, 67, 0.6);
+            border-color: #FF9F43 !important;
+        }
+
+        .option-btn {
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #CBD5E1;
+        }
+
+        .option-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #CBD5E1;
+        }
+
+        .progress-bar-fill {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .modal-overlay {
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+<canvas id="confetti-canvas"></canvas>
+
+<div id="app" class="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border-[10px] border-white relative">
+    
+    <!-- Header with Progress -->
+    <div class="bg-orange-400 p-6 text-white text-center relative overflow-hidden">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-3xl animate-bounce">☀️</span>
+            <h1 class="text-xl font-bold uppercase tracking-wider">Morning Adventure</h1>
+            <div class="flex items-center gap-2">
+                <div id="score-container" class="relative">
+                    <div id="score" class="bg-white text-orange-500 font-bold px-3 py-1 rounded-full shadow-inner text-sm">⭐ 0</div>
+                </div>
+                <button onclick="showResetModal()" class="bg-orange-500 hover:bg-orange-600 p-2 rounded-full transition-colors shadow-sm" title="Chơi lại">
+                    🔄
+                </button>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-orange-300 h-3 rounded-full overflow-hidden">
+            <div id="progress-fill" class="progress-bar-fill bg-white h-full w-0"></div>
+        </div>
+    </div>
+
+    <div id="step-nav" class="hidden flex overflow-x-auto gap-3 p-4 bg-orange-50 scrollbar-hide border-b border-orange-100">
+        <!-- Nodes will be injected here -->
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="p-6 min-h-[500px] flex flex-col relative">
+        
+        <!-- START SCREEN -->
+        <div id="start-screen" class="flex-1 flex flex-col items-center justify-center text-center space-y-6">
+            <div class="text-9xl mb-4">⏰</div>
+            <h2 class="text-3xl font-bold text-slate-800">Bé Đã Dậy Chưa?</h2>
+            <p class="text-slate-500">Cùng Bố Mẹ thực hiện 18 bước buổi sáng đầy thú vị nhé!</p>
+            <button onclick="startGame()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-5 px-8 rounded-full text-xl shadow-[0_6px_0_#2563EB] active:translate-y-1 active:shadow-none transition-all">
+                BẮT ĐẦU NGAY 🚀
+            </button>
+        </div>
+
+        <!-- GAME SCREEN -->
+        <div id="game-screen" class="hidden flex-1 flex flex-col space-y-6">
+            <!-- Parent Character Bubble -->
+            <div class="flex items-start gap-4">
+                <div id="parent-avatar" class="text-5xl bg-slate-100 p-3 rounded-3xl shadow-sm bounce-in">👩</div>
+                <div class="bg-slate-50 border-2 border-slate-100 p-5 rounded-3xl rounded-tl-none flex-1 relative">
+                    <p id="parent-name" class="text-xs font-bold text-orange-500 uppercase mb-1">Mom</p>
+                    <p id="parent-text" class="text-lg font-bold text-slate-800 leading-tight"></p>
+                    <button onclick="speakText(currentStepData().line)" class="absolute -right-3 -top-3 bg-white shadow-md text-orange-400 w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform">
+                        🔊
+                    </button>
+                </div>
+            </div>
+
+            <!-- Choices Area -->
+            <div id="options-container" class="flex-1 flex flex-col gap-3 py-4">
+                <!-- Choices will be injected here -->
+            </div>
+
+            <!-- Feedback Message -->
+            <div id="feedback" class="text-center font-bold p-3 rounded-2xl hidden opacity-0 transition-opacity duration-300"></div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="result-screen" class="hidden flex-1 flex flex-col items-center text-center">
+            <div class="text-7xl mb-4">🏆</div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Bé Là Nhà Vô Địch!</h2>
+            <p id="final-stats" class="text-slate-600 mb-6"></p>
+            
+            <div class="w-full bg-slate-50 rounded-3xl p-4 border-2 border-slate-100 overflow-y-auto max-h-[250px] mb-6 text-left" id="recap-list">
+                <!-- Recap items -->
+            </div>
+
+            <button onclick="location.reload()" class="w-full bg-green-500 text-white font-bold py-4 rounded-full shadow-[0_6px_0_#16A34A] active:translate-y-1 active:shadow-none transition-all">
+                CHƠI LẠI TỪ ĐẦU 🔄
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="reset-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white rounded-3xl p-8 max-w-xs w-full shadow-2xl text-center space-y-6 bounce-in">
+        <div class="text-6xl">🤔</div>
+        <h3 class="text-xl font-bold text-slate-800">Bé muốn chơi lại từ đầu sao?</h3>
+        <div class="flex gap-3">
+            <button onclick="hideResetModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl">Bỏ qua</button>
+            <button onclick="confirmReset()" class="flex-1 bg-orange-500 text-white font-bold py-3 rounded-2xl shadow-[0_4px_0_#EA580C]">Đồng ý!</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const steps = [
+    { icon: "🌅", char: "Mom", line: "Good morning, sunshine! Time to wake up.", vn: "Chào buổi sáng, tia nắng của mẹ! Đến lúc thức dậy rồi.", 
+      opts: [{t: "Good morning, Mom!", c: true, f: "Chào mẹ giỏi lắm!"}, {t: "Good night!", c: false, f: "Trời sáng rồi mà bé!"}] },
+    { icon: "🛌", char: "Dad", line: "Did you sleep well last night?", vn: "Đêm qua con ngủ có ngon không?",
+      opts: [{t: "Yes, I slept very well!", c: true, f: "Bé ngủ ngon là bố vui rồi!"}, {t: "No, thank you.", c: false, f: "Bố hỏi bé ngủ ngon không cơ."}] },
+    { icon: "🙆", char: "Mom", line: "Let's stretch our arms! Up and down.", vn: "Cùng vươn vai nào! Lên và xuống.",
+      opts: [{t: "Like this, Mom?", c: true, f: "Đúng rồi, vươn vai nào!"}, {t: "I am tired.", c: false, f: "Vận động tí cho khỏe bé ơi!"}] },
+    { icon: "🚿", char: "Mom", line: "Go to the bathroom and wash your face.", vn: "Vào phòng tắm và rửa mặt đi con.",
+      opts: [{t: "Yes, Mom. I'm going now.", c: true, f: "Rửa mặt cho tỉnh táo nhé!"}, {t: "I like candy.", c: false, f: "Đi rửa mặt đã nào!"}] },
+    { icon: "🪥", char: "Dad", line: "Don't forget to brush your teeth!", vn: "Đừng quên đánh răng nhé!",
+      opts: [{t: "I am brushing my teeth.", c: true, f: "Răng bé sẽ trắng xinh!"}, {t: "Not now, Dad.", c: false, f: "Phải đánh răng ngay chứ!"}] },
+    { icon: "👕", char: "Mom", line: "Which shirt do you want? Blue or red?", vn: "Con muốn mặc áo nào? Xanh hay đỏ?",
+      opts: [{t: "The blue one, please.", c: true, f: "Màu xanh rất hợp với bé!"}, {t: "I want a toy.", c: false, f: "Mẹ đang hỏi chọn áo mà."}] },
+    { icon: "👖", char: "Dad", line: "Put on your pants, honey.", vn: "Mặc quần vào đi con yêu.",
+      opts: [{t: "Okay, Dad. I can do it!", c: true, f: "Bé tự lập quá, hoan hô!"}, {t: "Help me, please.", c: true, f: "Được rồi, bố giúp bé nhé!"}] },
+    { icon: "🧦", char: "Mom", line: "Where are your socks?", vn: "Đôi tất của con đâu rồi nhỉ?",
+      opts: [{t: "They are under the bed!", c: true, f: "Tìm thấy tất rồi!"}, {t: "I don't know.", c: false, f: "Bé nhìn dưới gầm giường xem."}] },
+    { icon: "👟", char: "Dad", line: "Now, put on your shoes.", vn: "Bây giờ, hãy đi giày vào nào.",
+      opts: [{t: "I'm wearing my shoes.", c: true, f: "Giỏi quá, sắp xong rồi!"}, {t: "No shoes.", c: false, f: "Phải đi giày để đi học chứ!"}] },
+    { icon: "🥣", char: "Mom", line: "Are you hungry? Breakfast is ready!", vn: "Con có đói không? Bữa sáng sẵn sàng rồi!",
+      opts: [{t: "Yes, I'm very hungry!", c: true, f: "Cùng đi măm măm nào!"}, {t: "I'm full.", c: false, f: "Dậy sớm là phải ăn sáng chứ!"}] },
+    { icon: "🍳", char: "Dad", line: "Do you want eggs or bread?", vn: "Con muốn ăn trứng hay bánh mì?",
+      opts: [{t: "I want eggs, please.", c: true, f: "Trứng ốp la ngon tuyệt!"}, {t: "I want pizza.", c: false, f: "Sáng nay mình chỉ có trứng thôi."}] },
+    { icon: "🥛", char: "Mom", line: "Would you like some milk?", vn: "Con uống chút sữa nhé?",
+      opts: [{t: "Yes, please. I like milk.", c: true, f: "Sữa giúp bé cao lớn!"}, {t: "No milk.", c: false, f: "Uống một chút cho khỏe nhé."}] },
+    { icon: "🍎", char: "Dad", line: "Eat some apple, too. It's healthy.", vn: "Ăn thêm táo nữa, rất tốt cho sức khỏe.",
+      opts: [{t: "Thank you, Dad. It's yummy!", c: true, f: "Táo ngọt và giòn lắm!"}, {t: "I don't like it.", c: false, f: "Trái cây rất tốt cho bé đó."}] },
+    { icon: "🧼", char: "Mom", line: "Wash your hands after eating.", vn: "Rửa tay sau khi ăn xong con nhé.",
+      opts: [{t: "I'm washing my hands.", c: true, f: "Sạch sẽ là không lo vi khuẩn!"}, {t: "Later, Mom.", c: false, f: "Ăn xong phải rửa tay ngay nhé."}] },
+    { icon: "🎒", char: "Dad", line: "Is your school bag ready?", vn: "Cặp sách đi học của con xong chưa?",
+      opts: [{t: "Yes, it is in my room.", c: true, f: "Kiểm tra lại sách vở nào!"}, {t: "Where is it?", c: false, f: "Cặp sách ở trong phòng bé kìa."}] },
+    { icon: "☀️", char: "Mom", line: "Look! It's a sunny day today.", vn: "Nhìn kìa! Hôm nay là một ngày nắng đẹp.",
+      opts: [{t: "Wow! The sun is bright.", c: true, f: "Thời tiết hôm nay thật đẹp!"}, {t: "It is raining.", c: false, f: "Nhìn kìa, trời đang nắng mà!"}] },
+    { icon: "👒", char: "Dad", line: "Wear your hat, please.", vn: "Đội mũ vào đi con.",
+      opts: [{t: "Yes, Dad. I'm wearing it.", c: true, f: "Đội mũ cho khỏi nắng nhé!"}, {t: "I don't need it.", c: false, f: "Nắng lắm, phải đội mũ vào!"}] },
+    { icon: "🏫", char: "Mom", line: "Give me a hug. Have a nice day!", vn: "Ôm mẹ một cái nào. Chúc con ngày mới tốt lành!",
+      opts: [{t: "Goodbye Mom! See you later.", c: true, f: "Chào mẹ, bé đi học đây!"}, {t: "Hello teacher.", c: false, f: "Chào mẹ đã rồi hãy chào cô nhé!"}] }
+];
+
+let cur = 0;
+let score = 0;
+let solved = new Array(steps.length).fill(false);
+
+function speakText(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = 0.85;
+    window.speechSynthesis.speak(u);
+}
+
+function showResetModal() {
+    document.getElementById('reset-modal').classList.remove('hidden');
+}
+
+function hideResetModal() {
+    document.getElementById('reset-modal').classList.add('hidden');
+}
+
+function confirmReset() {
+    location.reload();
+}
+
+function startGame() {
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    document.getElementById('step-nav').classList.remove('hidden');
+    renderNav();
+    loadStep();
+}
+
+function currentStepData() { return steps[cur]; }
+
+function renderNav() {
+    const nav = document.getElementById('step-nav');
+    nav.innerHTML = '';
+    steps.forEach((s, i) => {
+        const node = document.createElement('div');
+        // Nút bấm được cải thiện: Đổi màu khi đã hoàn thành hoặc đang chọn
+        node.className = `step-node flex-shrink-0 w-11 h-11 rounded-full border-[3px] flex items-center justify-center cursor-pointer text-lg bg-white shadow-sm
+            ${i === cur ? 'border-orange-400 active' : 'border-slate-200'} 
+            ${solved[i] ? 'bg-green-50 border-green-400' : ''}`;
+        
+        node.innerHTML = solved[i] ? '✅' : s.icon;
+        
+        // Gán sự kiện click để nhảy bước
+        node.onclick = () => {
+            cur = i;
+            loadStep();
+        };
+        nav.appendChild(node);
+    });
+    
+    // Cuộn mượt tới nút đang chọn
+    const activeNode = nav.children[cur];
+    if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+function loadStep() {
+    const s = steps[cur];
+    const avatar = document.getElementById('parent-avatar');
+    avatar.innerText = s.char === "Mom" ? "👩" : "👨";
+    
+    // Hiệu ứng avatar khi đổi bước
+    avatar.classList.remove('bounce-in');
+    void avatar.offsetWidth; 
+    avatar.classList.add('bounce-in');
+
+    document.getElementById('parent-name').innerText = s.char;
+    document.getElementById('parent-text').innerText = s.line;
+    
+    updateProgress();
+    renderNav();
+
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+    
+    // Trộn ngẫu nhiên câu trả lời
+    const shuffled = [...s.opts].sort(() => Math.random() - 0.5);
+
+    shuffled.forEach(opt => {
+        const btnRow = document.createElement('div');
+        btnRow.className = "flex gap-2 w-full";
+
+        const btn = document.createElement('button');
+        btn.className = "option-btn flex-1 bg-white border-2 border-slate-200 text-slate-700 font-bold p-4 rounded-2xl text-left hover:bg-slate-50 transition-all";
+        btn.innerText = opt.t;
+        btn.onclick = (e) => check(opt, btn, e);
+
+        const listen = document.createElement('button');
+        listen.className = "w-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center text-xl hover:bg-blue-100 transition-colors";
+        listen.innerHTML = "🎧";
+        listen.onclick = (e) => { 
+            e.stopPropagation(); 
+            speakText(opt.t); 
+        };
+
+        btnRow.appendChild(btn);
+        btnRow.appendChild(listen);
+        container.appendChild(btnRow);
+    });
+
+    const fb = document.getElementById('feedback');
+    fb.classList.add('hidden');
+    fb.style.opacity = "0";
+
+    // Tự động phát âm lời của phụ huynh
+    speakText(s.line);
+}
+
+function updateProgress() {
+    const totalSolved = solved.filter(v => v).length;
+    const progress = (totalSolved / steps.length) * 100;
+    document.getElementById('progress-fill').style.width = `${progress}%`;
+}
+
+function check(opt, btn, event) {
+    const fb = document.getElementById('feedback');
+    fb.innerText = opt.f;
+    fb.classList.remove('hidden');
+    fb.style.opacity = "1";
+
+    if (opt.c) {
+        // Nếu trả lời đúng
+        if (!solved[cur]) {
+            score += 10;
+            solved[cur] = true;
+            
+            // Hiệu ứng cộng điểm bay lên tại vị trí nhấn
+            const pop = document.createElement('div');
+            pop.className = 'point-pop';
+            pop.innerText = '+10';
+            pop.style.left = `${event.clientX}px`;
+            pop.style.top = `${event.clientY}px`;
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 800);
+            
+            document.getElementById('score').innerText = `⭐ ${score}`;
+        }
+        
+        btn.classList.add('bg-green-100', 'border-green-500', 'text-green-700');
+        fb.className = "text-center font-bold p-3 rounded-2xl bg-green-50 text-green-600 animate-bounce";
+        
+        launchConfetti();
+        speakText("Great job!");
+
+        // Đợi một chút rồi sang bước tiếp theo
+        setTimeout(() => {
+            if (cur < steps.length - 1) {
+                cur++;
+                loadStep();
+            } else {
+                showResult();
+            }
+        }, 1500);
+    } else {
+        // Nếu trả lời sai
+        btn.classList.add('shake', 'bg-red-50', 'border-red-400', 'text-red-600');
+        fb.className = "text-center font-bold p-3 rounded-2xl bg-red-50 text-red-500";
+        
+        // Trừ 2 điểm nếu bé trả lời sai (tùy chọn)
+        if (score >= 2 && !solved[cur]) {
+            score -= 2;
+            document.getElementById('score').innerText = `⭐ ${score}`;
+            
+            const pop = document.createElement('div');
+            pop.className = 'point-pop';
+            pop.style.color = '#FF6B6B';
+            pop.innerText = '-2';
+            pop.style.left = `${event.clientX}px`;
+            pop.style.top = `${event.clientY}px`;
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 800);
+        }
+
+        speakText("Oh no, try again!");
+        setTimeout(() => btn.classList.remove('shake'), 400);
+    }
+}
+
+function showResult() {
+    document.getElementById('game-screen').classList.add('hidden');
+    document.getElementById('step-nav').classList.add('hidden');
+    document.getElementById('result-screen').classList.remove('hidden');
+    document.getElementById('final-stats').innerText = `Bé đã hoàn thành xuất sắc 18 thử thách và nhận được ${score} sao!`;
+
+    const list = document.getElementById('recap-list');
+    list.innerHTML = '<h3 class="font-bold text-orange-500 mb-4 border-b pb-2">📜 Nhật Ký Buổi Sáng:</h3>';
+    
+    steps.forEach(s => {
+        const correct = s.opts.find(o => o.c).t;
+        const item = document.createElement('div');
+        item.className = "mb-4 pb-4 border-b border-slate-100 last:border-0";
+        item.innerHTML = `
+            <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-bold text-orange-400 uppercase">${s.char}:</span>
+                <span class="text-sm italic text-slate-500">${s.line}</span>
+            </div>
+            <div class="text-xs text-slate-400 ml-4 mb-2">(${s.vn})</div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-blue-500 uppercase">Bé:</span>
+                <span class="text-sm font-bold text-slate-800">${correct}</span>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+
+    for(let i=0; i<3; i++) setTimeout(launchConfetti, i*500);
+}
+
+const canvas = document.getElementById('confetti-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function launchConfetti() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    for (let i = 0; i < 40; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: canvas.height + 10,
+            vx: (Math.random() - 0.5) * 8,
+            vy: -Math.random() * 15 - 10,
+            r: Math.random() * 5 + 2,
+            color: `hsl(${Math.random() * 360}, 100%, 60%)`
+        });
+    }
+}
+
+function updateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach((p, i) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.4; 
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        if (p.y > canvas.height + 20) particles.splice(i, 1);
+    });
+    requestAnimationFrame(updateConfetti);
+}
+updateConfetti();
+
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+</script>
+
+</body>
+</html>

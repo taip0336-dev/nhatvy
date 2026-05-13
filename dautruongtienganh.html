@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Adventure for Kids</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+            touch-action: manipulation;
+            overflow-x: hidden;
+        }
+        .bg-pattern {
+            background-color: #f0f9ff;
+            background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
+        }
+        .bouncy {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-15px);}
+            60% {transform: translateY(-7px);}
+        }
+        .card-pop {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card-pop:hover {
+            transform: scale(1.05);
+        }
+        .slide-up {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-pattern flex items-center justify-center p-4">
+
+    <div id="game-container" class="bg-white rounded-[2rem] shadow-2xl p-6 w-full max-w-lg relative overflow-hidden border-8 border-white">
+        
+        <!-- Màn hình khởi đầu -->
+        <div id="start-screen" class="text-center py-8">
+            <div class="text-6xl mb-4 bouncy">🏆</div>
+            <h1 class="text-4xl font-extrabold text-indigo-600 mb-2">Đấu Trường Tiếng Anh</h1>
+            <p class="text-gray-500 mb-8 font-semibold italic">Luyện nghe và phá kỷ lục!</p>
+            
+            <div class="mb-6 bg-indigo-50 py-2 px-4 rounded-full inline-block text-indigo-600 font-bold">
+                Kỷ lục của bạn: ⭐ <span id="high-score-val">0</span>
+            </div>
+
+            <button onclick="showModeSelection()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-6 rounded-2xl shadow-xl transition-all active:scale-95 text-2xl">
+                Bắt Đầu Chơi! 🚀
+            </button>
+        </div>
+
+        <!-- Màn hình chọn chế độ -->
+        <div id="mode-screen" class="hidden text-center py-4">
+            <div class="flex items-center mb-6">
+                <button onclick="backToStart()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <h2 class="text-2xl font-bold text-gray-700 flex-1 pr-8">Chọn nội dung</h2>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+                <button onclick="startGame('sentence')" class="flex items-center gap-4 bg-blue-100 hover:bg-blue-200 p-4 rounded-2xl border-b-4 border-blue-400 transition-all active:scale-95">
+                    <span class="text-3xl bg-white p-2 rounded-xl">🗣️</span>
+                    <div class="text-left">
+                        <div class="font-bold text-blue-700">Thử Thách Cả Câu</div>
+                        <div class="text-xs text-blue-600">Luyện nghe kỹ - Không tính giờ</div>
+                    </div>
+                </button>
+                <button onclick="startGame('flashcard')" class="flex items-center gap-4 bg-emerald-100 hover:bg-emerald-200 p-4 rounded-2xl border-b-4 border-emerald-400 transition-all active:scale-95">
+                    <span class="text-3xl bg-white p-2 rounded-xl">🖼️</span>
+                    <div class="text-left"><div class="font-bold text-emerald-700">Đua Hình Ảnh</div></div>
+                </button>
+                <button onclick="startGame('listen')" class="flex items-center gap-4 bg-purple-100 hover:bg-purple-200 p-4 rounded-2xl border-b-4 border-purple-400 transition-all active:scale-95">
+                    <span class="text-3xl bg-white p-2 rounded-xl">🎧</span>
+                    <div class="text-left"><div class="font-bold text-purple-700">Thử Thách Lắng Nghe</div></div>
+                </button>
+                <button onclick="startGame('scramble')" class="flex items-center gap-4 bg-amber-100 hover:bg-amber-200 p-4 rounded-2xl border-b-4 border-amber-400 transition-all active:scale-95">
+                    <span class="text-3xl bg-white p-2 rounded-xl">🧩</span>
+                    <div class="text-left"><div class="font-bold text-amber-700">Siêu Ghép Chữ</div></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Màn hình chơi chính -->
+        <div id="play-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                    <button onclick="showConfirmExit()" class="p-2 bg-gray-50 hover:bg-red-50 rounded-xl text-gray-400 hover:text-red-500 transition-all active:scale-90 z-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <div id="timer-container" class="bg-red-100 px-3 py-1 rounded-xl border-2 border-red-300">
+                        <span id="timer" class="font-bold text-red-600 text-lg">60s</span>
+                    </div>
+                    <div id="zen-badge" class="hidden bg-blue-100 px-3 py-1 rounded-xl border-2 border-blue-300">
+                        <span class="font-bold text-blue-600 text-lg">🧘 Tự do</span>
+                    </div>
+                </div>
+                <div class="bg-yellow-100 px-4 py-1 rounded-xl border-2 border-yellow-300">
+                    <span class="font-bold text-yellow-700 text-lg">⭐ <span id="score">0</span></span>
+                </div>
+            </div>
+
+            <div id="game-content" class="min-h-[350px] flex flex-col items-center justify-center">
+                <div id="sentence-ui" class="hidden w-full text-center slide-up">
+                    <button onclick="speakCurrentSentence()" class="bg-blue-500 text-white p-6 rounded-full shadow-2xl mb-8 mx-auto block active:scale-90 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                    </button>
+                    <div class="grid grid-cols-2 gap-4" id="sentence-options-container"></div>
+                </div>
+
+                <div id="flashcard-ui" class="hidden w-full text-center slide-up">
+                    <div id="question-image" class="text-9xl mb-6 bouncy">🐶</div>
+                    <div class="grid grid-cols-2 gap-3" id="options-container"></div>
+                </div>
+
+                <div id="listen-ui" class="hidden w-full text-center slide-up">
+                    <button onclick="speakCurrentWord()" class="bg-purple-500 text-white p-8 rounded-full shadow-2xl mb-6 mx-auto block active:scale-90">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                    </button>
+                    <div class="grid grid-cols-2 gap-3" id="listen-options-container"></div>
+                </div>
+
+                <div id="scramble-ui" class="hidden w-full text-center slide-up">
+                    <div id="scramble-image" class="text-8xl mb-4">🍎</div>
+                    <div id="answer-slots" class="flex justify-center gap-2 mb-6 min-h-[55px] border-b-2 border-dashed border-indigo-100 py-2"></div>
+                    <div id="scrambled-letters" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="check-overlay" class="fixed inset-0 bg-black/50 hidden z-[100] flex items-center justify-center p-6">
+            <div class="bg-white rounded-[2.5rem] w-full max-w-sm p-8 text-center shadow-2xl border-8 border-white slide-up">
+                <div id="check-icon" class="text-7xl mb-4">✅</div>
+                <div id="check-status" class="text-2xl font-black mb-4 uppercase">Chính xác!</div>
+                <div class="bg-gray-50 rounded-2xl p-6 mb-6">
+                    <div id="check-text-en" class="text-2xl font-bold text-indigo-600 mb-2">...</div>
+                    <div id="check-text-vi" class="text-lg font-semibold text-gray-500 italic">...</div>
+                </div>
+                <button onclick="nextQuestion()" class="w-full bg-indigo-500 text-white font-black py-5 rounded-2xl shadow-lg active:scale-95 text-xl">
+                    TIẾP TỤC ➔
+                </button>
+            </div>
+        </div>
+
+        <div id="exit-confirm-modal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-6">
+            <div class="bg-white rounded-3xl w-full max-w-xs p-6 text-center shadow-2xl slide-up">
+                <div class="text-5xl mb-4">❓</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-6">Bạn muốn quay lại màn hình chọn nội dung?</h3>
+                <div class="flex gap-3">
+                    <button onclick="closeConfirmExit()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl">Ở lại</button>
+                    <button onclick="showModeSelection()" class="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl">Thoát</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-screen" class="hidden text-center py-8">
+            <div class="text-8xl mb-4">🏁</div>
+            <h2 class="text-3xl font-black text-indigo-600 mb-2">HOÀN THÀNH!</h2>
+            <div class="bg-indigo-50 p-6 rounded-3xl mb-6">
+                <p class="text-5xl font-black text-indigo-600 mb-4">⭐ <span id="final-score">0</span></p>
+            </div>
+            <button onclick="showModeSelection()" class="w-full bg-indigo-500 text-white font-bold py-4 rounded-2xl mb-3 shadow-lg">CHƠI TIẾP</button>
+            <button onclick="backToStart()" class="text-gray-400 font-bold hover:text-gray-600 w-full">Màn hình chính</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Data mở rộng
+        const vocabulary = [
+            // Động vật
+            { word: 'APPLE', emoji: '🍎', vn: 'Quả táo' }, 
+            { word: 'DOG', emoji: '🐶', vn: 'Con chó' },
+            { word: 'CAT', emoji: '🐱', vn: 'Con mèo' }, 
+            { word: 'BIRD', emoji: '🐦', vn: 'Con chim' },
+            { word: 'FISH', emoji: '🐟', vn: 'Con cá' },
+            { word: 'LION', emoji: '🦁', vn: 'Sư tử' },
+            { word: 'MONKEY', emoji: '🐒', vn: 'Con khỉ' },
+            { word: 'ELEPHANT', emoji: '🐘', vn: 'Con voi' },
+            { word: 'RABBIT', emoji: '🐰', vn: 'Con thỏ' },
+            { word: 'BEE', emoji: '🐝', vn: 'Con ong' },
+            // Thức ăn
+            { word: 'BANANA', emoji: '🍌', vn: 'Quả chuối' },
+            { word: 'GRAPE', emoji: '🍇', vn: 'Quả nho' },
+            { word: 'CAKE', emoji: '🍰', vn: 'Bánh kem' },
+            { word: 'MILK', emoji: '🥛', vn: 'Sữa' },
+            { word: 'PIZZA', emoji: '🍕', vn: 'Bánh Pizza' },
+            // Đồ vật
+            { word: 'CAR', emoji: '🚗', vn: 'Ô tô' },
+            { word: 'SUN', emoji: '☀️', vn: 'Mặt trời' },
+            { word: 'BALL', emoji: '⚽', vn: 'Quả bóng' },
+            { word: 'BOOK', emoji: '📖', vn: 'Quyển sách' },
+            { word: 'PLANE', emoji: '✈️', vn: 'Máy bay' },
+            { word: 'BIKE', emoji: '🚲', vn: 'Xe đạp' }
+        ];
+
+        const sentences = [
+            { text: "The cat is eating.", emoji: "🐱", vn: "Con mèo đang ăn." },
+            { text: "I like to eat apples.", emoji: "🍎", vn: "Mình thích ăn táo." },
+            { text: "The dog is jumping.", emoji: "🐶", vn: "Con chó đang nhảy." },
+            { text: "A fast red car.", emoji: "🚗", vn: "Một chiếc ô tô đỏ chạy nhanh." },
+            { text: "The sun is yellow.", emoji: "☀️", vn: "Mặt trời màu vàng." },
+            { text: "The bird can fly.", emoji: "🐦", vn: "Con chim có thể bay." },
+            { text: "I drink cold milk.", emoji: "🥛", vn: "Mình uống sữa lạnh." },
+            { text: "The monkey eats banana.", emoji: "🐒", vn: "Con khỉ ăn chuối." },
+            { text: "The big elephant.", emoji: "🐘", vn: "Một con voi to lớn." },
+            { text: "The baby is sleeping.", emoji: "👶", vn: "Em bé đang ngủ." },
+            { text: "A blue ball.", emoji: "⚽", vn: "Một quả bóng màu xanh." },
+            { text: "I love my mom.", emoji: "❤️", vn: "Con yêu mẹ." }
+        ];
+
+        let score = 0, timeLeft = 60, gameActive = false, isChecking = false;
+        let currentItem = null, currentMode = '', timerInterval = null, preferredVoice = null;
+        let scrambleAnswer = [];
+
+        function loadVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            preferredVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || voices.find(v => v.lang === 'en-US');
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+
+        function speak(text, rate = 0.8) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            if (preferredVoice) u.voice = preferredVoice;
+            u.lang = 'en-US'; u.rate = rate;
+            window.speechSynthesis.speak(u);
+        }
+
+        function backToStart() {
+            resetGameLogic();
+            hideAllScreens();
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        function showModeSelection() {
+            resetGameLogic();
+            hideAllScreens();
+            document.getElementById('mode-screen').classList.remove('hidden');
+            const high = localStorage.getItem('english_kids_highscore') || 0;
+            document.getElementById('high-score-val').innerText = high;
+        }
+
+        function hideAllScreens() {
+            const screens = ['start-screen', 'mode-screen', 'play-screen', 'result-screen', 'check-overlay', 'exit-confirm-modal'];
+            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
+        }
+
+        function resetGameLogic() {
+            gameActive = false;
+            isChecking = false;
+            clearInterval(timerInterval);
+            window.speechSynthesis.cancel();
+        }
+
+        function showConfirmExit() {
+            document.getElementById('exit-confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmExit() {
+            document.getElementById('exit-confirm-modal').classList.add('hidden');
+        }
+
+        function startGame(mode) {
+            currentMode = mode;
+            score = 0; timeLeft = 60;
+            gameActive = true;
+            isChecking = false;
+            
+            hideAllScreens();
+            document.getElementById('play-screen').classList.remove('hidden');
+            document.getElementById('score').innerText = '0';
+
+            if (mode === 'sentence') {
+                document.getElementById('timer-container').classList.add('hidden');
+                document.getElementById('zen-badge').classList.remove('hidden');
+            } else {
+                document.getElementById('timer-container').classList.remove('hidden');
+                document.getElementById('zen-badge').classList.add('hidden');
+                startTimer();
+            }
+            nextQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (isChecking || !gameActive) return;
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft + 's';
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function nextQuestion() {
+            if (!gameActive) return;
+            isChecking = false;
+            document.getElementById('check-overlay').classList.add('hidden');
+            document.getElementById('exit-confirm-modal').classList.add('hidden');
+            
+            ['sentence-ui', 'flashcard-ui', 'listen-ui', 'scramble-ui'].forEach(id => document.getElementById(id).classList.add('hidden'));
+
+            if (currentMode === 'sentence') setupSentence();
+            else if (currentMode === 'flashcard') setupFlashcard();
+            else if (currentMode === 'listen') setupListen();
+            else if (currentMode === 'scramble') setupScramble();
+        }
+
+        function setupSentence() {
+            const ui = document.getElementById('sentence-ui');
+            ui.classList.remove('hidden');
+            currentItem = sentences[Math.floor(Math.random() * sentences.length)];
+            const container = document.getElementById('sentence-options-container');
+            container.innerHTML = '';
+            speak(currentItem.text, 0.7);
+
+            let opts = [currentItem];
+            while (opts.length < 4) {
+                let r = sentences[Math.floor(Math.random() * sentences.length)];
+                if (!opts.find(i => i.text === r.text)) opts.push(r);
+            }
+            opts.sort(() => 0.5 - Math.random()).forEach(opt => {
+                const b = document.createElement('button');
+                b.className = "bg-white border-4 border-blue-50 p-8 rounded-3xl text-7xl card-pop shadow-sm active:scale-95";
+                b.innerText = opt.emoji;
+                b.onclick = () => { if(!isChecking) checkAnswer(opt.text === currentItem.text); };
+                container.appendChild(b);
+            });
+        }
+
+        function setupFlashcard() {
+            document.getElementById('flashcard-ui').classList.remove('hidden');
+            currentItem = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+            document.getElementById('question-image').innerText = currentItem.emoji;
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            speak(currentItem.word);
+            let opts = [currentItem.word];
+            while(opts.length < 4) {
+                let r = vocabulary[Math.floor(Math.random() * vocabulary.length)].word;
+                if(!opts.includes(r)) opts.push(r);
+            }
+            opts.sort(() => 0.5 - Math.random()).forEach(o => {
+                const b = document.createElement('button');
+                b.className = "bg-indigo-50 p-4 rounded-xl font-bold text-indigo-600 border-2 border-indigo-100 active:scale-95";
+                b.innerText = o;
+                b.onclick = () => checkAnswer(o === currentItem.word);
+                container.appendChild(b);
+            });
+        }
+
+        function setupListen() {
+            document.getElementById('listen-ui').classList.remove('hidden');
+            currentItem = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+            speak(currentItem.word);
+            const container = document.getElementById('listen-options-container');
+            container.innerHTML = '';
+            let opts = [currentItem];
+            while(opts.length < 4) {
+                let r = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+                if(!opts.find(x => x.word === r.word)) opts.push(r);
+            }
+            opts.sort(() => 0.5 - Math.random()).forEach(o => {
+                const b = document.createElement('button');
+                b.className = "bg-white p-6 rounded-2xl text-6xl shadow-sm border-2 border-purple-50 active:scale-95";
+                b.innerText = o.emoji;
+                b.onclick = () => checkAnswer(o.word === currentItem.word);
+                container.appendChild(b);
+            });
+        }
+
+        function setupScramble() {
+            document.getElementById('scramble-ui').classList.remove('hidden');
+            currentItem = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+            document.getElementById('scramble-image').innerText = currentItem.emoji;
+            scrambleAnswer = [];
+            speak(currentItem.word);
+            const letterContainer = document.getElementById('scrambled-letters');
+            const slotContainer = document.getElementById('answer-slots');
+            letterContainer.innerHTML = ''; slotContainer.innerHTML = '';
+            
+            currentItem.word.split('').sort(() => 0.5 - Math.random()).forEach(l => {
+                const b = document.createElement('button');
+                b.className = "w-10 h-10 bg-amber-400 text-white rounded-lg font-bold text-xl active:scale-90";
+                b.innerText = l;
+                b.onclick = () => {
+                    if(isChecking) return;
+                    scrambleAnswer.push(l);
+                    b.style.visibility = 'hidden';
+                    document.getElementById(`slot-${scrambleAnswer.length-1}`).innerText = l;
+                    if(scrambleAnswer.length === currentItem.word.length) checkAnswer(scrambleAnswer.join('') === currentItem.word);
+                };
+                letterContainer.appendChild(b);
+            });
+            for(let i=0; i<currentItem.word.length; i++){
+                const s = document.createElement('div');
+                s.id = `slot-${i}`;
+                s.className = "w-10 h-10 border-b-4 border-amber-100 flex items-center justify-center text-xl font-bold";
+                slotContainer.appendChild(s);
+            }
+        }
+
+        function checkAnswer(isCorrect) {
+            isChecking = true;
+            document.getElementById('check-text-en').innerText = currentMode === 'sentence' ? currentItem.text : currentItem.word;
+            document.getElementById('check-text-vi').innerText = currentItem.vn;
+            
+            if (isCorrect) {
+                document.getElementById('check-icon').innerText = "✅";
+                document.getElementById('check-status').innerText = "ĐÚNG RỒI!";
+                score += 10;
+                document.getElementById('score').innerText = score;
+                speak(currentMode === 'sentence' ? currentItem.text : currentItem.word);
+            } else {
+                document.getElementById('check-icon').innerText = "❌";
+                document.getElementById('check-status').innerText = "CỐ LÊN!";
+                speak("Try again!");
+            }
+            document.getElementById('check-overlay').classList.remove('hidden');
+            if(isCorrect && currentMode !== 'sentence') setTimeout(() => { if(gameActive && isChecking) nextQuestion(); }, 1500);
+        }
+
+        function endGame() {
+            resetGameLogic();
+            hideAllScreens();
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+            const high = localStorage.getItem('english_kids_highscore') || 0;
+            if(score > high) localStorage.setItem('english_kids_highscore', score);
+        }
+
+        function speakCurrentSentence() { speak(currentItem.text, 0.7); }
+        function speakCurrentWord() { speak(currentItem.word); }
+
+        window.onload = () => {
+            const high = localStorage.getItem('english_kids_highscore') || 0;
+            document.getElementById('high-score-val').innerText = high;
+        };
+    </script>
+</body>
+</html>
