@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summer English Adventure - Ultimate Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background: #f0f9ff; user-select: none; overflow-x: hidden; }
+        .game-card { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; border-bottom: 8px solid rgba(0,0,0,0.1); position: relative; }
+        .game-card:hover { transform: translateY(-5px); filter: brightness(1.05); }
+        .game-card:active { transform: translateY(2px); border-bottom-width: 2px; }
+        .floating { animation: floating 3s ease-in-out infinite; }
+        @keyframes floating { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+        .pulse-mic { animation: pulse-red 1.5s infinite; background-color: #ef4444 !important; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .letter-box { width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; background: white; border: 3px solid #3b82f6; border-radius: 12px; cursor: grab; box-shadow: 0 4px 0 #2563eb; transition: transform 0.2s; }
+        .target-slot { width: 55px; height: 55px; border: 3px dashed #cbd5e1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: #3b82f6; background: rgba(255,255,255,0.5); }
+        .bubble-parent { background: #e0f2fe; border-radius: 20px 20px 20px 0; border: 2px solid #bae6fd; position: relative; }
+        .bubble-kid { background: #fef3c7; border-radius: 20px 20px 0 20px; border: 2px solid #fde68a; position: relative; }
+        .btn-audio { background: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
+        .btn-audio:active { transform: scale(0.9); }
+    </style>
+</head>
+<body class="bg-sky-50 text-slate-800">
+
+    <header class="p-4 bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <!-- Nút trang chủ chính (Logo) -->
+            <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" onclick="window.location.href='index.html'">
+                <span class="text-4xl">🏠</span>
+                <div class="hidden sm:block">
+                    <h1 class="text-xl font-bold text-blue-600 leading-none">English Fun</h1>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Summer Adventure</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2 sm:gap-4 items-center">
+                <!-- Nút Home Text bổ sung cho rõ ràng -->
+                <button onclick="showScreen('home')" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-full font-bold text-sm hover:bg-blue-100 transition-colors">
+                    Trang Chủ
+                </button>
+                
+                <div class="bg-yellow-400 text-white px-4 py-1 rounded-full flex items-center gap-2 font-bold shadow-sm">
+                    <span>⭐</span><span id="global-stars">0</span>
+                </div>
+                
+                <button onclick="showScreen('parent')" class="bg-slate-100 p-2 px-4 rounded-full hover:bg-slate-200 font-bold text-sm hidden sm:block">📊 Report</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-4 pb-20">
+        <section id="home" class="screen active space-y-8">
+            <div class="text-center py-6">
+                <h2 class="text-4xl font-extrabold text-blue-900 mb-2">Summer Adventure!</h2>
+                <p class="text-slate-500 text-lg font-medium">Chào bé yêu! Mình cùng chơi nhé!</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div onclick="initFlashcards()" class="game-card bg-pink-100 border-pink-300 p-8 rounded-3xl text-center">
+                    <div class="text-6xl mb-3">🎴</div>
+                    <div class="font-black text-pink-700 uppercase">Flashcards</div>
+                </div>
+                <div onclick="initSpellingGame()" class="game-card bg-purple-100 border-purple-300 p-8 rounded-3xl text-center">
+                    <div class="text-6xl mb-3">🧩</div>
+                    <div class="font-black text-purple-700 uppercase">Spelling</div>
+                </div>
+                <div onclick="initShadowing()" class="game-card bg-blue-100 border-blue-300 p-8 rounded-3xl text-center">
+                    <div class="text-6xl mb-3">🗣️</div>
+                    <div class="font-black text-blue-700 uppercase">Shadowing</div>
+                </div>
+                <div onclick="initRoleplay()" class="game-card bg-green-100 border-green-300 p-8 rounded-3xl text-center">
+                    <div class="text-6xl mb-3">🎭</div>
+                    <div class="font-black text-green-700 uppercase">Roleplay</div>
+                </div>
+                <div onclick="initListeningGame()" class="game-card bg-yellow-100 border-yellow-300 p-8 rounded-3xl text-center">
+                    <div class="text-6xl mb-3">👂</div>
+                    <div class="font-black text-yellow-700 uppercase">Listen & Pick</div>
+                </div>
+                <div onclick="initReflexGame()" class="game-card bg-orange-100 border-orange-300 p-8 rounded-3xl text-center">
+                    <div class="text-6xl mb-3">⚡</div>
+                    <div class="font-black text-orange-700 uppercase">Quick Touch</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="shadowing" class="screen space-y-6">
+            <div class="flex justify-between items-center">
+                <button onclick="showScreen('home')" class="bg-white px-6 py-2 rounded-2xl font-bold text-blue-600 shadow-sm border-2 border-blue-50">← Menu</button>
+                <div class="text-xl font-black text-green-600 uppercase tracking-widest">Shadowing Mode</div>
+            </div>
+            
+            <div class="bg-white rounded-[40px] p-8 md:p-12 shadow-xl border-b-8 border-slate-100 text-center space-y-8">
+                <div class="space-y-4">
+                    <div id="shadow-sentence" class="text-3xl md:text-5xl font-black text-slate-800 leading-tight min-h-[80px]">...</div>
+                    <div id="shadow-translation" class="text-xl text-blue-400 font-bold hidden italic">Nghĩa tiếng Việt</div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button onclick="playShadowSentence(1)" class="bg-blue-500 text-white px-8 py-3 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform">🔊 Normal</button>
+                    <button onclick="playShadowSentence(0.6)" class="bg-orange-400 text-white px-8 py-3 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform">🐢 Slow</button>
+                    <button onclick="toggleTranslation()" class="bg-slate-100 text-slate-600 px-8 py-3 rounded-2xl font-bold hover:bg-slate-200">📖 Dịch</button>
+                </div>
+
+                <div class="relative py-8 flex flex-col items-center gap-4 border-y-4 border-dashed border-slate-50">
+                    <div id="mic-status" class="text-sm font-black text-slate-400 uppercase tracking-widest">Nhấn Micro và nói theo nhé!</div>
+                    <button id="btn-record" onclick="startShadowRecording()" class="w-28 h-28 bg-rose-500 rounded-full flex items-center justify-center text-5xl text-white shadow-2xl transition-all hover:scale-105 active:scale-90">🎤</button>
+                    <div id="recognition-result" class="text-2xl font-bold text-blue-600 italic min-h-[40px]"></div>
+                </div>
+
+                <div id="shadow-feedback" class="hidden p-6 rounded-3xl bg-green-50 transform scale-110">
+                    <div id="feedback-emoji" class="text-5xl mb-2">🌟</div>
+                    <div id="feedback-text" class="text-3xl font-black text-green-600 uppercase">Great!</div>
+                    <div id="accuracy-score" class="text-slate-400 font-bold mt-1">Accuracy: 0%</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <button onclick="prevShadow()" class="bg-white border-4 border-slate-100 py-4 rounded-3xl font-bold text-slate-400 uppercase">PREV</button>
+                <button onclick="nextShadow()" class="bg-green-500 py-4 rounded-3xl font-black text-white shadow-xl uppercase">NEXT</button>
+            </div>
+        </section>
+
+        <section id="roleplay" class="screen space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <button onclick="showScreen('home')" class="bg-white px-6 py-2 rounded-xl font-bold text-slate-600 shadow-sm self-start">← Back</button>
+                <select id="roleplay-scenario" onchange="loadRoleplay(this.value)" class="w-full sm:w-auto bg-white border-4 border-indigo-200 rounded-2xl px-6 py-3 outline-none font-bold text-indigo-600 shadow-sm">
+                    <option value="breakfast">🍳 Breakfast Time (Bữa sáng)</option>
+                    <option value="park">🌳 At the Park (Ở công viên)</option>
+                    <option value="supermarket">🛒 Supermarket (Siêu thị)</option>
+                    <option value="bedtime">🌙 Bedtime Story (Đi ngủ)</option>
+                    <option value="doctor">🏥 At the Doctor (Khám bệnh)</option>
+                </select>
+            </div>
+
+            <div id="roleplay-chat-container" class="bg-indigo-50/50 rounded-[40px] p-4 md:p-8 min-h-[500px] space-y-6 overflow-y-auto max-h-[70vh]"></div>
+            
+            <div class="bg-white p-6 rounded-3xl border-2 border-indigo-100 text-center">
+                <p class="text-indigo-500 font-bold">💡 Nhấn vào nút 🔊 trong mỗi câu để nghe máy đọc mẫu!</p>
+            </div>
+        </section>
+
+        <section id="flashcards" class="screen space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <button onclick="showScreen('home')" class="bg-white px-6 py-2 rounded-xl font-bold text-slate-600 shadow-sm self-start">← Back</button>
+                <select id="card-category" onchange="changeCategory(this.value)" class="w-full sm:w-auto bg-white border-4 border-blue-200 rounded-2xl px-6 py-3 outline-none font-bold text-blue-600 shadow-sm">
+                    <option value="animals">🦁 Animals</option>
+                    <option value="colors">🎨 Colors</option>
+                    <option value="food">🍎 Food</option>
+                    <option value="family">👨‍👩‍👧 Family</option>
+                    <option value="numbers">🔢 Numbers</option>
+                    <option value="school">🏫 School</option>
+                    <option value="actions">🏃 Actions</option>
+                </select>
+            </div>
+            <div id="flashcard-container" onclick="speakCurrentWord()" class="bg-white rounded-[50px] shadow-2xl p-12 text-center min-h-[400px] flex flex-col items-center justify-center space-y-8 border-b-[12px] border-blue-100 cursor-pointer">
+                <div id="fc-emoji" class="text-[10rem] md:text-[12rem] floating">🐶</div>
+                <h3 id="fc-word" class="text-6xl md:text-7xl font-black text-blue-800 uppercase tracking-tighter">DOG</h3>
+                <div class="bg-blue-600 text-white px-8 py-3 rounded-full shadow-lg font-bold">🔊 LISTEN</div>
+            </div>
+            <div class="grid grid-cols-2 gap-6 pt-4">
+                <button onclick="prevCard()" class="bg-white border-4 border-slate-200 py-4 rounded-3xl font-black text-slate-400 uppercase">PREV</button>
+                <button onclick="nextCard()" class="bg-blue-500 py-4 rounded-3xl font-black text-white shadow-xl uppercase">NEXT</button>
+            </div>
+        </section>
+
+        <section id="spelling" class="screen space-y-6">
+            <button onclick="showScreen('home')" class="bg-white px-6 py-2 rounded-xl font-bold text-slate-400 shadow-sm border-2 border-slate-50">← Back</button>
+            <div class="bg-white rounded-[40px] p-8 md:p-12 shadow-xl border-b-8 border-slate-100 text-center">
+                <div id="puzzle-emoji" class="text-8xl mb-8 floating">🍎</div>
+                <div id="puzzle-slots" class="flex justify-center gap-2 mb-12 flex-wrap min-h-[60px]"></div>
+                <div id="puzzle-letters" class="flex justify-center gap-3 flex-wrap border-t-2 border-slate-50 pt-10 min-h-[60px]"></div>
+            </div>
+            <button onclick="initSpellingGame()" class="w-full py-4 bg-purple-500 text-white rounded-3xl font-black shadow-lg uppercase">NEXT WORD</button>
+        </section>
+
+        <section id="listening" class="screen space-y-6">
+            <button onclick="showScreen('home')" class="bg-white px-6 py-2 rounded-xl font-bold text-slate-400">← Back</button>
+            <div class="text-center py-4">
+                <div id="listen-score" class="text-2xl font-black text-yellow-500">SCORE: 0</div>
+                <button onclick="playListenTarget()" class="mt-4 w-32 h-32 bg-yellow-400 rounded-full text-5xl text-white shadow-xl mx-auto flex items-center justify-center">🔊</button>
+                <p class="mt-4 font-bold text-slate-400 uppercase">Listen and pick!</p>
+            </div>
+            <div id="listen-options" class="grid grid-cols-2 gap-6"></div>
+        </section>
+
+        <section id="reflex" class="screen space-y-6">
+            <div class="flex justify-between items-center">
+                <button onclick="showScreen('home')" class="bg-white px-6 py-2 rounded-xl font-bold text-slate-400">← Back</button>
+                <div id="reflex-timer" class="text-2xl font-black text-rose-500">TIME: 15s</div>
+            </div>
+            <div class="bg-white p-6 rounded-3xl text-center shadow-lg">
+                <h3 class="text-xl font-bold text-slate-500 uppercase">Find this:</h3>
+                <div id="reflex-target" class="text-5xl font-black text-blue-600 mt-2">DOG</div>
+            </div>
+            <div id="reflex-grid" class="grid grid-cols-3 gap-4"></div>
+        </section>
+
+        <section id="parent" class="screen space-y-6">
+            <button onclick="showScreen('home')" class="bg-white px-6 py-2 rounded-xl font-bold text-slate-400">← Back</button>
+            <div class="bg-white rounded-3xl p-10 shadow-xl">
+                <h2 class="text-3xl font-black mb-8 border-b-4 border-blue-50 pb-4 text-blue-600 text-center uppercase tracking-widest">📊 Study Report</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                    <div class="bg-blue-50 p-8 rounded-3xl text-center">
+                        <div class="text-sm text-slate-400 uppercase font-black mb-2">Words Learned</div>
+                        <div id="stat-words" class="text-6xl font-black text-blue-600">0</div>
+                    </div>
+                    <div class="bg-green-50 p-8 rounded-3xl text-center">
+                        <div class="text-sm text-slate-400 uppercase font-black mb-2">Shadowing Skill</div>
+                        <div id="stat-shadow" class="text-6xl font-black text-green-600">0</div>
+                    </div>
+                </div>
+                <button onclick="resetProgress()" class="w-full mt-8 py-4 text-rose-500 font-black border-4 border-rose-100 rounded-2xl hover:bg-rose-50 uppercase">Reset Everything</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const DATA = {
+            animals: [
+                { word: 'Dog', emoji: '🐶' }, { word: 'Cat', emoji: '🐱' }, { word: 'Elephant', emoji: '🐘' },
+                { word: 'Lion', emoji: '🦁' }, { word: 'Monkey', emoji: '🐒' }, { word: 'Rabbit', emoji: '🐰' },
+                { word: 'Bird', emoji: '🐦' }, { word: 'Panda', emoji: '🐼' }, { word: 'Tiger', emoji: '🐯' },
+                { word: 'Giraffe', emoji: '🦒' }, { word: 'Zebra', emoji: '🦓' }, { word: 'Duck', emoji: '🦆' },
+                { word: 'Pig', emoji: '🐷' }, { word: 'Cow', emoji: '🐮' }, { word: 'Horse', emoji: '🐴' },
+                { word: 'Chicken', emoji: '🐔' }, { word: 'Sheep', emoji: '🐑' }, { word: 'Whale', emoji: '🐳' }
+            ],
+            colors: [
+                { word: 'Red', emoji: '🔴' }, { word: 'Blue', emoji: '🔵' }, { word: 'Green', emoji: '🟢' },
+                { word: 'Yellow', emoji: '🟡' }, { word: 'Orange', emoji: '🟠' }, { word: 'Purple', emoji: '🟣' },
+                { word: 'Pink', emoji: '🌸' }, { word: 'Black', emoji: '⚫' }, { word: 'White', emoji: '⚪' },
+                { word: 'Brown', emoji: '🟤' }, { word: 'Grey', emoji: '🌑' }
+            ],
+            food: [
+                { word: 'Apple', emoji: '🍎' }, { word: 'Banana', emoji: '🍌' }, { word: 'Pizza', emoji: '🍕' },
+                { word: 'Milk', emoji: '🥛' }, { word: 'Bread', emoji: '🍞' }, { word: 'Egg', emoji: '🥚' },
+                { word: 'Carrot', emoji: '🥕' }, { word: 'Cookie', emoji: '🍪' }, { word: 'Ice Cream', emoji: '🍦' },
+                { word: 'Grape', emoji: '🍇' }, { word: 'Strawberry', emoji: '🍓' }, { word: 'Cake', emoji: '🍰' },
+                { word: 'Candy', emoji: '🍬' }, { word: 'Water', emoji: '💧' }, { word: 'Fish', emoji: '🐟' }
+            ],
+            family: [
+                { word: 'Mom', emoji: '👩' }, { word: 'Dad', emoji: '👨' }, { word: 'Brother', emoji: '👦' },
+                { word: 'Sister', emoji: '👧' }, { word: 'Baby', emoji: '👶' }, { word: 'Grandma', emoji: '👵' },
+                { word: 'Grandpa', emoji: '👴' }, { word: 'Family', emoji: '👨‍👩‍👧‍👦' }
+            ],
+            numbers: [
+                { word: 'One', emoji: '1️⃣' }, { word: 'Two', emoji: '2️⃣' }, { word: 'Three', emoji: '3️⃣' },
+                { word: 'Four', emoji: '4️⃣' }, { word: 'Five', emoji: '5️⃣' }, { word: 'Six', emoji: '6️⃣' },
+                { word: 'Seven', emoji: '7️⃣' }, { word: 'Eight', emoji: '8️⃣' }, { word: 'Nine', emoji: '9️⃣' }, { word: 'Ten', emoji: '🔟' }
+            ],
+            school: [
+                { word: 'Book', emoji: '📖' }, { word: 'Pen', emoji: '🖊️' }, { word: 'Pencil', emoji: '✏️' },
+                { word: 'Bag', emoji: '🎒' }, { word: 'Ruler', emoji: '📏' }, { word: 'Chair', emoji: '🪑' },
+                { word: 'Table', emoji: '🏫' }, { word: 'Eraser', emoji: '🧽' }, { word: 'School Bus', emoji: '🚌' }
+            ],
+            actions: [
+                { word: 'Run', emoji: '🏃' }, { word: 'Jump', emoji: '🦘' }, { word: 'Sleep', emoji: '😴' },
+                { word: 'Eat', emoji: '😋' }, { word: 'Drink', emoji: '🥤' }, { word: 'Dance', emoji: '💃' },
+                { word: 'Sing', emoji: '🎤' }, { word: 'Read', emoji: '📚' }, { word: 'Smile', emoji: '😊' }
+            ],
+            shadowing: [
+                { en: "Hello! How are you?", vi: "Xin chào! Bạn khỏe không?" },
+                { en: "I am seven years old.", vi: "Con năm nay 7 tuổi." },
+                { en: "I like to eat apples.", vi: "Con thích ăn táo." },
+                { en: "This is my happy family.", vi: "Đây là gia đình hạnh phúc của con." },
+                { en: "Let's play together!", vi: "Mình cùng chơi với nhau nhé!" },
+                { en: "The sun is shining bright.", vi: "Ông mặt trời đang tỏa sáng rực rỡ." },
+                { en: "I can wash my hands.", vi: "Con có thể tự rửa tay." },
+                { en: "Look at the colorful rainbow.", vi: "Nhìn dải cầu vồng rực rỡ kìa." },
+                { en: "Brush your teeth before bed.", vi: "Hãy đánh răng trước khi đi ngủ nhé." },
+                { en: "I love my mommy and daddy.", vi: "Con yêu bố và mẹ của con." }
+            ],
+            roleplay: {
+                breakfast: [
+                    { role: 'parent', en: "Good morning, my dear! Did you sleep well?", vi: "Chào buổi sáng con yêu! Con ngủ ngon không?" },
+                    { role: 'kid', en: "Good morning, Mom! Yes, I had a very good sleep.", vi: "Chào buổi sáng mẹ! Dạ, con ngủ rất ngon ạ." },
+                    { role: 'parent', en: "I made your favorite breakfast! Are you hungry?", vi: "Mẹ đã làm món ăn sáng con thích nhất đây! Con đói chưa?" },
+                    { role: 'kid', en: "Yes, I am starving! I want some bread and honey.", vi: "Dạ rồi ạ, con đói lắm! Con muốn ăn bánh mì với mật ong." },
+                    { role: 'parent', en: "Do you want some orange juice or milk?", vi: "Con muốn uống nước cam hay uống sữa nào?" },
+                    { role: 'kid', en: "I want cold milk, please. I love milk!", vi: "Cho con sữa lạnh ạ. Con thích sữa lắm!" },
+                    { role: 'parent', en: "Okay, here is your milk. Drink slowly.", vi: "Được rồi, sữa của con đây. Uống từ từ thôi nhé." },
+                    { role: 'kid', en: "Thank you, Mom! This is so yummy.", vi: "Con cảm ơn mẹ! Ngon quá đi mất." }
+                ],
+                park: [
+                    { role: 'parent', en: "Look at the park! It is so big and green.", vi: "Nhìn công viên kìa! Nó thật to và xanh." },
+                    { role: 'kid', en: "Wow! Can I play on the swing first?", vi: "Oa! Con chơi xích đu trước được không mẹ?" },
+                    { role: 'parent', en: "Sure! But be careful, don't go too high.", vi: "Được chứ! Nhưng cẩn thận, đừng đu cao quá nhé." },
+                    { role: 'kid', en: "I will! Wheee! Look at me, I am flying!", vi: "Vâng ạ! Wheee! Nhìn con nè, con đang bay!" },
+                    { role: 'parent', en: "You are so brave! Now, do you want to go on the slide?", vi: "Con dũng cảm quá! Giờ con có muốn chơi cầu trượt không?" },
+                    { role: 'kid', en: "Yes! The slide is so fast and fun!", vi: "Dạ có! Cầu trượt nhanh và vui lắm!" },
+                    { role: 'parent', en: "Run and play, my little hero!", vi: "Đi chơi đi, người hùng nhỏ của mẹ!" }
+                ],
+                doctor: [
+                    { role: 'parent', en: "Don't be scared. The doctor is very kind.", vi: "Đừng sợ. Bác sĩ rất tốt bụng mà." },
+                    { role: 'kid', en: "Will it hurt, Daddy?", vi: "Có đau không bố ơi?" },
+                    { role: 'parent', en: "No, the doctor just wants to check your heartbeat.", vi: "Không đâu, bác sĩ chỉ muốn kiểm tra nhịp tim thôi." },
+                    { role: 'kid', en: "I will be a brave boy. I am not crying.", vi: "Con sẽ dũng cảm. Con không khóc đâu." },
+                    { role: 'parent', en: "Good job! Open your mouth and say Ahhh.", vi: "Giỏi lắm! Há miệng ra và nói Ahhh nào." },
+                    { role: 'kid', en: "Ahhhhh. Is my throat okay, Doctor?", vi: "Ahhhhh. Cổ họng con ổn chứ bác sĩ?" },
+                    { role: 'parent', en: "Yes! You are very healthy. Here is a sticker for you!", vi: "Đúng rồi! Con rất khỏe mạnh. Tặng con một hình dán nè!" }
+                ],
+                bedtime: [
+                    { role: 'parent', en: "It is time to go to bed. Put on your pajamas.", vi: "Đến giờ đi ngủ rồi. Mặc đồ ngủ vào đi con." },
+                    { role: 'kid', en: "But I am not sleepy yet. Can we read a story?", vi: "Nhưng con chưa buồn ngủ. Mình đọc truyện được không ạ?" },
+                    { role: 'parent', en: "Okay, just one story. Which one do you like?", vi: "Được rồi, chỉ một truyện thôi nhé. Con thích truyện nào?" },
+                    { role: 'kid', en: "I want the story about the little rabbit.", vi: "Con muốn truyện về chú thỏ nhỏ ạ." },
+                    { role: 'parent', en: "Once upon a time... there was a rabbit... Good night, sweetie.", vi: "Ngày xửa ngày xưa... có một chú thỏ... Chúc con ngủ ngon." },
+                    { role: 'kid', en: "Good night, Mom! I love you.", vi: "Chúc mẹ ngủ ngon! Con yêu mẹ." }
+                ],
+                supermarket: [
+                    { role: 'parent', en: "We need some fruits. Can you help me find apples?", vi: "Chúng ta cần một ít trái cây. Con giúp mẹ tìm táo được không?" },
+                    { role: 'kid', en: "Sure! Look, the red apples are here!", vi: "Dạ được ạ! Nhìn kìa, táo đỏ ở đây này!" },
+                    { role: 'parent', en: "Great job. Let's get five apples.", vi: "Giỏi lắm. Mình lấy 5 quả táo nhé." },
+                    { role: 'kid', en: "One, two, three, four, five! Done!", vi: "Một, hai, ba, bốn, năm! Xong rồi ạ!" }
+                ]
+            }
+        };
+
+        let state = {
+            stars: 0,
+            currentCategory: 'animals',
+            fcIndex: 0,
+            shadowIndex: 0,
+            isRecording: false,
+            stats: { words: 0, shadow: 0 }
+        };
+
+        const synth = window.speechSynthesis;
+        let recognition;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            
+            recognition.onstart = () => {
+                state.isRecording = true;
+                document.getElementById('btn-record').classList.add('pulse-mic');
+                document.getElementById('mic-status').innerText = "Listening... 👂";
+            };
+
+            recognition.onend = () => {
+                state.isRecording = false;
+                document.getElementById('btn-record').classList.remove('pulse-mic');
+                document.getElementById('mic-status').innerText = "Tap to speak!";
+            };
+
+            recognition.onresult = (event) => {
+                const result = event.results[0][0].transcript;
+                document.getElementById('recognition-result').innerText = `You said: "${result}"`;
+                const accuracy = calculateAccuracy(result, DATA.shadowing[state.shadowIndex].en);
+                handleShadowResult(accuracy);
+            };
+        }
+
+        function speakText(text, rate = 1) {
+            synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-US';
+            utter.rate = rate;
+            synth.speak(utter);
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(screenId);
+            if(target) target.classList.add('active');
+            window.scrollTo(0, 0);
+            if(screenId !== 'reflex') clearInterval(reflexInterval);
+        }
+
+        function updateStats() {
+            document.getElementById('stat-words').innerText = state.stats.words;
+            document.getElementById('stat-shadow').innerText = state.stats.shadow;
+            document.getElementById('global-stars').innerText = state.stars;
+            localStorage.setItem('summer_eng_ultimate', JSON.stringify(state));
+        }
+
+        function addStars(num) {
+            state.stars += num;
+            updateStats();
+        }
+
+        function initFlashcards() { showScreen('flashcards'); updateFlashcard(); }
+        function updateFlashcard() {
+            const list = DATA[state.currentCategory];
+            const item = list[state.fcIndex];
+            document.getElementById('fc-emoji').innerText = item.emoji;
+            document.getElementById('fc-word').innerText = item.word;
+            state.stats.words++;
+            updateStats();
+        }
+        function nextCard() { state.fcIndex = (state.fcIndex + 1) % DATA[state.currentCategory].length; updateFlashcard(); }
+        function prevCard() { state.fcIndex = (state.fcIndex - 1 + DATA[state.currentCategory].length) % DATA[state.currentCategory].length; updateFlashcard(); }
+        function changeCategory(cat) { state.currentCategory = cat; state.fcIndex = 0; updateFlashcard(); }
+        function speakCurrentWord() { speakText(document.getElementById('fc-word').innerText); }
+
+        function initShadowing() { showScreen('shadowing'); updateShadowSentence(); }
+        function updateShadowSentence() {
+            const item = DATA.shadowing[state.shadowIndex];
+            document.getElementById('shadow-sentence').innerText = item.en;
+            document.getElementById('shadow-translation').innerText = item.vi;
+            document.getElementById('shadow-feedback').classList.add('hidden');
+            document.getElementById('recognition-result').innerText = '';
+        }
+        function playShadowSentence(rate) { speakText(DATA.shadowing[state.shadowIndex].en, rate); }
+        function toggleTranslation() { document.getElementById('shadow-translation').classList.toggle('hidden'); }
+        function nextShadow() { state.shadowIndex = (state.shadowIndex + 1) % DATA.shadowing.length; updateShadowSentence(); }
+        function prevShadow() { state.shadowIndex = (state.shadowIndex - 1 + DATA.shadowing.length) % DATA.shadowing.length; updateShadowSentence(); }
+        
+        function startShadowRecording() {
+            if (!recognition) {
+                alert("Speech recognition not supported in this browser!");
+                return;
+            }
+            if (state.isRecording) return;
+            try { recognition.start(); } catch(e) { console.log(e); }
+        }
+
+        function calculateAccuracy(s1, s2) {
+            const t1 = s1.toLowerCase().replace(/[^\w\s]/g, '').trim();
+            const t2 = s2.toLowerCase().replace(/[^\w\s]/g, '').trim();
+            if(t1 === t2) return 100;
+            const w1 = t1.split(' '), w2 = t2.split(' ');
+            let matches = 0;
+            w1.forEach(w => { if(w2.includes(w)) matches++; });
+            return Math.round((matches / Math.max(w1.length, w2.length)) * 100);
+        }
+
+        function handleShadowResult(accuracy) {
+            const f = document.getElementById('shadow-feedback');
+            f.classList.remove('hidden');
+            document.getElementById('accuracy-score').innerText = `Accuracy: ${accuracy}%`;
+            if(accuracy >= 70) {
+                document.getElementById('feedback-text').innerText = "Excellent! 🏆";
+                addStars(10); state.stats.shadow++;
+            } else {
+                document.getElementById('feedback-text').innerText = "Try again! 💪";
+            }
+        }
+
+        function initRoleplay() { showScreen('roleplay'); loadRoleplay('breakfast'); }
+        function loadRoleplay(key) {
+            const container = document.getElementById('roleplay-chat-container');
+            const lines = DATA.roleplay[key];
+            container.innerHTML = '';
+            lines.forEach(line => {
+                const wrapper = document.createElement('div');
+                wrapper.className = `flex w-full items-start gap-3 ${line.role === 'parent' ? 'justify-start' : 'justify-end'}`;
+                
+                const bubble = document.createElement('div');
+                bubble.className = `max-w-[80%] p-4 rounded-3xl relative ${line.role === 'parent' ? 'bubble-parent text-blue-900' : 'bubble-kid text-yellow-900'}`;
+                
+                const audioBtn = `<button onclick="speakText('${line.en.replace(/'/g, "\\'")}')" class="btn-audio shadow-sm ml-2 mb-1 float-right">🔊</button>`;
+                
+                bubble.innerHTML = `
+                    <div class="text-[10px] font-black uppercase opacity-40 mb-1">${line.role}</div>
+                    ${audioBtn}
+                    <div class="font-bold text-lg leading-snug">${line.en}</div>
+                    <div class="text-xs italic opacity-60 mt-2 border-t border-black/5 pt-1">${line.vi}</div>
+                `;
+                
+                wrapper.appendChild(bubble);
+                container.appendChild(wrapper);
+            });
+            container.scrollTop = 0;
+        }
+
+        function initSpellingGame() {
+            showScreen('spelling');
+            const pool = ['animals', 'food', 'school', 'actions'];
+            const cat = pool[Math.floor(Math.random() * pool.length)];
+            const item = DATA[cat][Math.floor(Math.random() * DATA[cat].length)];
+            const word = item.word.toUpperCase();
+            
+            document.getElementById('puzzle-emoji').innerText = item.emoji;
+            const slots = document.getElementById('puzzle-slots');
+            const letters = document.getElementById('puzzle-letters');
+            slots.innerHTML = ''; letters.innerHTML = '';
+            
+            let current = new Array(word.length).fill(null);
+
+            word.split('').forEach((_, i) => {
+                const s = document.createElement('div');
+                s.className = "target-slot";
+                s.dataset.index = i;
+                slots.appendChild(s);
+            });
+
+            const shuffled = word.split('').map((c, i) => ({c, i})).sort(() => Math.random()-0.5);
+            shuffled.forEach((obj) => {
+                const box = document.createElement('div');
+                box.className = "letter-box";
+                box.innerText = obj.c;
+                box.draggable = true;
+                box.ondragstart = (e) => e.dataTransfer.setData('text', obj.c + '|' + obj.i);
+                letters.appendChild(box);
+            });
+
+            slots.ondragover = (e) => e.preventDefault();
+            slots.ondrop = (e) => {
+                const [char, origin] = e.dataTransfer.getData('text').split('|');
+                const target = e.target.closest('.target-slot');
+                if(!target) return;
+                const idx = parseInt(target.dataset.index);
+                if(word[idx] === char && !current[idx]) {
+                    target.innerText = char;
+                    target.classList.add('bg-green-500', 'text-white', 'border-none');
+                    current[idx] = char;
+                    document.querySelectorAll('.letter-box').forEach(b => {
+                        if(b.innerText === char) { b.style.opacity = '0'; b.draggable = false; }
+                    });
+                    if(current.join('') === word) {
+                        addStars(20);
+                        speakText(word);
+                        setTimeout(initSpellingGame, 1500);
+                    }
+                }
+            };
+        }
+
+        let listenTarget = null;
+        let listenScore = 0;
+        function initListeningGame() {
+            showScreen('listening');
+            generateListenQuestion();
+        }
+        function generateListenQuestion() {
+            const pool = DATA.animals.concat(DATA.food).concat(DATA.colors).concat(DATA.actions);
+            const options = [];
+            while(options.length < 4) {
+                const rand = pool[Math.floor(Math.random() * pool.length)];
+                if(!options.includes(rand)) options.push(rand);
+            }
+            listenTarget = options[Math.floor(Math.random() * options.length)];
+            const container = document.getElementById('listen-options');
+            container.innerHTML = '';
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white p-6 rounded-3xl text-6xl shadow-lg border-b-8 border-slate-100 hover:scale-105 active:scale-95 transition-all";
+                btn.innerText = opt.emoji;
+                btn.onclick = () => {
+                    if(opt === listenTarget) {
+                        listenScore += 10;
+                        document.getElementById('listen-score').innerText = `SCORE: ${listenScore}`;
+                        addStars(5);
+                        generateListenQuestion();
+                    } else {
+                        btn.classList.add('bg-rose-100');
+                        setTimeout(() => btn.classList.remove('bg-rose-100'), 500);
+                    }
+                };
+                container.appendChild(btn);
+            });
+            playListenTarget();
+        }
+        function playListenTarget() { if(listenTarget) speakText(listenTarget.word); }
+
+        let reflexTimer = 15;
+        let reflexInterval;
+        function initReflexGame() {
+            showScreen('reflex');
+            reflexTimer = 15;
+            clearInterval(reflexInterval);
+            reflexInterval = setInterval(() => {
+                reflexTimer--;
+                document.getElementById('reflex-timer').innerText = `TIME: ${reflexTimer}s`;
+                if(reflexTimer <= 0) {
+                    clearInterval(reflexInterval);
+                    alert("Time's up! Great job!");
+                    showScreen('home');
+                }
+            }, 1000);
+            generateReflex();
+        }
+        function generateReflex() {
+            const pool = DATA.animals.concat(DATA.food).concat(DATA.colors);
+            const options = [];
+            while(options.length < 9) {
+                const rand = pool[Math.floor(Math.random() * pool.length)];
+                if(!options.includes(rand)) options.push(rand);
+            }
+            const target = options[Math.floor(Math.random() * options.length)];
+            document.getElementById('reflex-target').innerText = target.word;
+            const grid = document.getElementById('reflex-grid');
+            grid.innerHTML = '';
+            options.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded-2xl text-4xl text-center shadow cursor-pointer active:scale-90 transition-transform";
+                div.innerText = opt.emoji;
+                div.onclick = () => {
+                    if(opt === target) {
+                        addStars(2);
+                        generateReflex();
+                    }
+                };
+                grid.appendChild(div);
+            });
+        }
+
+        function resetProgress() {
+            if(confirm("Xóa tất cả tiến trình học tập?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        window.onload = () => {
+            const saved = localStorage.getItem('summer_eng_ultimate');
+            if(saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed };
+                } catch(e) {}
+            }
+            updateStats();
+        };
+    </script>
+</body>
+</html>
